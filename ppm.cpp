@@ -1,11 +1,19 @@
 #include "ppm.h"
 #include <stdexcept>
+#include <sys/stat.h>
+#include <cstring>
 
 void write_ppm(const char* filename, unsigned char* data, int width, int height)
 {
+    if (mkdir("my_outputs", 0777) != 0 && errno != EEXIST) {
+        throw std::runtime_error("Error: could not create output folder.");
+    }
+
+    std::string full_path = "my_outputs/" + std::string(filename);
+
     FILE *outfile;
 
-    if ((outfile = fopen(filename, "w")) == NULL) 
+    if ((outfile = fopen(full_path.c_str(), "w")) == NULL) 
     {
         throw std::runtime_error("Error: The ppm file cannot be opened for writing.");
     }
