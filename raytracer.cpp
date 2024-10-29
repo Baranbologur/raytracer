@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iomanip>
 #include <ctime>
+#include "bvh.h"
 
 int main(int argc, char* argv[])
 {
@@ -20,6 +21,10 @@ int main(int argc, char* argv[])
     parser::Scene scene;
 
     scene.loadFromXml(argv[1]);
+
+    BVH_Tree tree = BVH_Tree(scene);
+
+    std::cout << Node::max_level << "\n";
 
     for(parser::Camera camera: scene.cameras){
         parser::Vec3f center_point = camera.position + camera.gaze * camera.near_distance;
@@ -38,7 +43,7 @@ int main(int argc, char* argv[])
                 parser::Vec3f ray_direction = pixel_point - camera.position;
 
                 Ray ray = Ray(camera.position, ray_direction);
-                RGB rgb = ray.getcolor(scene, scene.max_recursion_depth);
+                RGB rgb = ray.getcolor(tree, scene, scene.max_recursion_depth);
                 rgb.truncate();
                 image[img++] = rgb.r;
                 image[img++] = rgb.g;

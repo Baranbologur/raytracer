@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <cfloat>
 
 namespace parser
 {
@@ -15,6 +16,9 @@ namespace parser
         float x, y, z;
 
         Vec3f(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
+
+        static const Vec3f MAXVEC;
+        static const Vec3f MINVEC;
 
         float calculateMagnitude() const {
             return pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 0.5);
@@ -59,6 +63,26 @@ namespace parser
 
         Vec3f operator-() const {
             return {-x, -y, -z};
+        }
+
+        bool operator<(const Vec3f &vec) const {
+            return x < vec.x && y < vec.y && z < vec.z;
+        }
+
+        bool operator>(const Vec3f &vec) const {
+            return x > vec.x && y > vec.y && z > vec.z;
+        }
+
+        bool operator<=(const Vec3f &vec) const {
+            return x <= vec.x && y <= vec.y && z <= vec.z;
+        }
+
+        bool operator>=(const Vec3f &vec) const {
+            return x >= vec.x && y >= vec.y && z >= vec.z;
+        }
+
+        bool operator==(const Vec3f &vec) const {
+            return x == vec.x && y == vec.y && z == vec.z;
         }
 
         friend std::ostream& operator<<(std::ostream& os, const Vec3f& vec) {
@@ -153,9 +177,11 @@ namespace parser
         int material_id;
         Vec3f a, b, c;
         Vec3f normal_vector;
+        Vec3f centeroid;
 
         void calculateAndSetNormalVector(){
             normal_vector = (c-b).crossProductWith(a-b);
+            centeroid = (a + b + c) / 3;
         }
     };
 

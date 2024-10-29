@@ -2,6 +2,7 @@
 #include "ray.h"
 #include "common.h"
 #include <algorithm> 
+#include "bvh.h"
 
 Ray::Ray(parser::Vec3f start_position, parser::Vec3f direction): start_position(start_position), direction(direction){;}
 
@@ -69,50 +70,28 @@ intersectionInfo Ray::getIntersectionInfoWithSphere(const parser::Sphere &sphere
     return intersectionInfo(true, t);
 }
 
-ClosestIntersectedObjectInfo Ray::findIntersectedObject(const parser::Scene &scene, const bool &backface_culling_enabled) const {
+ClosestIntersectedObjectInfo Ray::findIntersectedObject(const Node &node, const bool &backface_culling_enabled) const {
     parser::Triangle closestTriangle;
     parser::Sphere closestSphere;
     float min_t = MAXFLOAT;
     bool found = false;
     bool sphere_found = false;
 
-    // şu an bütün meshlerdeki trianglerlar direkt triangles vectorüne atıldığı için buna gerek yok. OLması ve olmaması aynı şey
-    // for (parser::Mesh mesh: scene.meshes){ 
-    //     for (parser::Face face: mesh.faces){
-    //         parser::Triangle triangle;
-    //         triangle.material_id = mesh.material_id;
-    //         triangle.a = scene.vertex_data[face.v0_id - 1];
-    //         triangle.b = scene.vertex_data[face.v1_id - 1];
-    //         triangle.c = scene.vertex_data[face.v2_id - 1];
-    //         triangle.calculateAndSetNormalVector();
-    //         if (backface_culling_enabled && direction.dotProductWith(triangle.normal_vector) >= 0){
-    //             continue;
-    //         }
-    //         intersectionInfo intersectionInfo = getIntersectionInfoWithTriangle(triangle);
-    //         if(intersectionInfo.isIntersected && intersectionInfo.t < min_t && intersectionInfo.t > 0){
-    //             closestTriangle = triangle;
-    //             min_t = intersectionInfo.t;
-    //             found = true;
-    //         }
-    //     }
-    // }
-    int size = scene.triangles.size();
-    for (int i = 0; i < size; i++){
-        parser::Triangle triangle = scene.triangles[i];
-        if (backface_culling_enabled && direction.dotProductWith(triangle.normal_vector) >= 0){
+    for (parser::Triangle* triangle: node.triangles){
+        if (backface_culling_enabled && direction.dotProductWith(triangle->normal_vector) >= 0){
             continue;
         }
-        intersectionInfo intersectionInfo = getIntersectionInfoWithTriangle(triangle);
+        intersectionInfo intersectionInfo = getIntersectionInfoWithTriangle(*triangle);
         if(intersectionInfo.isIntersected && intersectionInfo.t < min_t && intersectionInfo.t > 0){
-            closestTriangle = triangle;
+            closestTriangle = *triangle;
             min_t = intersectionInfo.t;
             found = true;
         }
     }
-    for (parser::Sphere sphere: scene.spheres){
-        intersectionInfo intersectionInfo = getIntersectionInfoWithSphere(sphere);
+    for (parser::Sphere* sphere: node.spheres){
+        intersectionInfo intersectionInfo = getIntersectionInfoWithSphere(*sphere);
         if(intersectionInfo.isIntersected && intersectionInfo.t < min_t && intersectionInfo.t > 0){
-            closestSphere = sphere;
+            closestSphere = *sphere;
             min_t = intersectionInfo.t;
             found = true;
             sphere_found = true;
@@ -125,11 +104,12 @@ ClosestIntersectedObjectInfo Ray::findIntersectedObject(const parser::Scene &sce
     else return ClosestIntersectedObjectInfo(false);
 }
 
-RGB Ray::getcolor(const parser::Scene &scene, const int &depth) const {
+RGB Ray::getcolor(const BVH_Tree &tree, const parser::Scene &scene, const int &depth) const {
     if (depth == -1){
         return RGB(0,0,0);
     }
-    ClosestIntersectedObjectInfo objectInfo = findIntersectedObject(scene, true);
+    ClosestIntersectedObjectInfo objectInfo = tree.getIntersectInfo(*this, true);
+
     if (!objectInfo.isIntersectedWithAnyObject) {
         if (depth == scene.max_recursion_depth){
             return RGB(scene.background_color);
@@ -147,7 +127,7 @@ RGB Ray::getcolor(const parser::Scene &scene, const int &depth) const {
         }
         parser::Vec3f new_ray_start_position = objectInfo.intersection_point + objectInfo.unit_normal_vector * scene.shadow_ray_epsilon;
         Ray ray_to_light = Ray(new_ray_start_position, pointlight.position - new_ray_start_position);
-        ClosestIntersectedObjectInfo closestIntersectedObjectInfoForLightRay = ray_to_light.findIntersectedObject(scene, false);
+        ClosestIntersectedObjectInfo closestIntersectedObjectInfoForLightRay = tree.getIntersectInfo(ray_to_light, false);
         if (closestIntersectedObjectInfoForLightRay.isIntersectedWithAnyObject && closestIntersectedObjectInfoForLightRay.t < 1){
             continue;
         }
@@ -159,7 +139,7 @@ RGB Ray::getcolor(const parser::Scene &scene, const int &depth) const {
         parser::Vec3f new_ray_start_position = objectInfo.intersection_point + objectInfo.unit_normal_vector * scene.shadow_ray_epsilon;
         float cosTheta = parser::Vec3f::cosOfAngelBetween(-direction, objectInfo.unit_normal_vector);
         Ray new_ray = Ray(new_ray_start_position, (objectInfo.unit_normal_vector * 2 * cosTheta) + direction.getUnitVector());
-        color = color + new_ray.getcolor(scene, depth - 1) * material.mirror;
+        color = color + new_ray.getcolor(tree, scene, depth - 1) * material.mirror;
     }
     return color;
 }

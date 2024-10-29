@@ -3,6 +3,9 @@
 #include <sstream>
 #include <stdexcept>
 
+const parser::Vec3f parser::Vec3f::MAXVEC(FLT_MAX, FLT_MAX, FLT_MAX);
+const parser::Vec3f parser::Vec3f::MINVEC(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
 void parser::Scene::loadFromXml(const std::string &filepath)
 {
     tinyxml2::XMLDocument file;
