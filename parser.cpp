@@ -186,15 +186,15 @@ void parser::Scene::loadFromXml(const std::string &filepath)
 
     // baranbologur added
     // meshlerin içimndekiler direkt trianglea atılıyor
+    Triangle triangle = Triangle();
     for (int i = 0; i < meshes.size(); i++){
         std::vector<Face> faces = meshes[i].faces;
         for (int j = 0; j < faces.size(); j++){
-            Triangle triangle;
-            triangle.material_id = meshes[i].material_id;
-            triangle.a = vertex_data[faces[j].v0_id - 1];
-            triangle.b = vertex_data[faces[j].v1_id - 1];
-            triangle.c = vertex_data[faces[j].v2_id - 1];
-            triangle.calculateAndSetNormalVector();
+            Vec3f a = vertex_data[faces[j].v0_id - 1];
+            Vec3f b = vertex_data[faces[j].v1_id - 1];
+            Vec3f c = vertex_data[faces[j].v2_id - 1];
+            int material_id = meshes[i].material_id;
+            triangle = Triangle(a, b, c, material_id);
             triangles.push_back(triangle);
         }
     }
@@ -203,27 +203,26 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     //Get Triangles
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Triangle");
-    Triangle triangle;
     while (element)
     {
         child = element->FirstChildElement("Material");
         stream << child->GetText() << std::endl;
-        stream >> triangle.material_id;
+        int material_id;
+        stream >> material_id;
 
         child = element->FirstChildElement("Indices");
         stream << child->GetText() << std::endl;
         //baranbologur changed
         int index_1, index_2, index_3;
         stream >> index_1 >> index_2 >> index_3;
-        triangle.a = vertex_data[index_1 - 1];
-        triangle.b = vertex_data[index_2 - 1];
-        triangle.c = vertex_data[index_3 - 1];
-        triangle.calculateAndSetNormalVector();
-
+        Vec3f a = vertex_data[index_1 - 1];
+        Vec3f b = vertex_data[index_2 - 1];
+        Vec3f c = vertex_data[index_3 - 1];
+        triangle = Triangle(a, b, c, material_id);
         triangles.push_back(triangle);
         element = element->NextSiblingElement("Triangle");
     }
-
+    
     //Get Spheres
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Sphere");

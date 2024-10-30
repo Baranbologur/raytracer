@@ -56,42 +56,49 @@ intersectionInfo Ray::getIntersectionInfoWithTriangle(const parser::Triangle &tr
     return intersectionInfo(false);
 }
 
-intersectionInfo Ray::getIntersectionInfoWithSphere(const parser::Sphere &sphere) const {
+intersectionInfo Ray::getIntersectionInfoWithSphere(const parser::Sphere& sphere) const {
     parser::Vec3f tmpvec = start_position - sphere.center;
-    float discriminant = pow((direction.dotProductWith(tmpvec)), 2)\
-                - direction.dotProductWith(direction)*(tmpvec.dotProductWith(tmpvec) - pow(sphere.radius, 2));
+    float dirDotDir = direction.dotProductWith(direction);
+    float tmpDotDir = direction.dotProductWith(tmpvec);
+    float tmpDotTmp = tmpvec.dotProductWith(tmpvec);
 
-    if (discriminant < 0){
+    float discriminant = tmpDotDir * tmpDotDir - dirDotDir * (tmpDotTmp - sphere.radius * sphere.radius);
+
+    if (discriminant < 0) {
         return intersectionInfo(false);
     }
 
-    float t = (- direction.dotProductWith(tmpvec) - pow(discriminant, 0.5)) / direction.dotProductWith(direction);
+    float sqrtDiscriminant = std::sqrt(discriminant);
+    float t = (-tmpDotDir - sqrtDiscriminant) / dirDotDir;
 
     return intersectionInfo(true, t);
 }
 
-ClosestIntersectedObjectInfo Ray::findIntersectedObject(const Node &node, const bool &backface_culling_enabled) const {
-    parser::Triangle closestTriangle;
-    parser::Sphere closestSphere;
+ClosestIntersectedObjectInfo Ray::findIntersectedObject(const Node& node, const bool& backface_culling_enabled) const {
+    parser::Triangle* closestTriangle;
+    parser::Sphere* closestSphere;
     float min_t = MAXFLOAT;
     bool found = false;
     bool sphere_found = false;
 
-    for (parser::Triangle* triangle: node.triangles){
+    for (parser::Triangle* triangle: node.triangles){ 
         if (backface_culling_enabled && direction.dotProductWith(triangle->normal_vector) >= 0){
             continue;
         }
         intersectionInfo intersectionInfo = getIntersectionInfoWithTriangle(*triangle);
         if(intersectionInfo.isIntersected && intersectionInfo.t < min_t && intersectionInfo.t > 0){
-            closestTriangle = *triangle;
+            closestTriangle = triangle;
             min_t = intersectionInfo.t;
             found = true;
         }
     }
     for (parser::Sphere* sphere: node.spheres){
+        if (backface_culling_enabled && direction.dotProductWith(start_position - sphere->center) >= 0){
+            continue;
+        }
         intersectionInfo intersectionInfo = getIntersectionInfoWithSphere(*sphere);
         if(intersectionInfo.isIntersected && intersectionInfo.t < min_t && intersectionInfo.t > 0){
-            closestSphere = *sphere;
+            closestSphere = sphere;
             min_t = intersectionInfo.t;
             found = true;
             sphere_found = true;
@@ -121,7 +128,7 @@ RGB Ray::getcolor(const BVH_Tree &tree, const parser::Scene &scene, const int &d
     parser::Material material = scene.materials[objectInfo.material_id - 1];
     RGB color = computeAmbientColor(material, scene.ambient_light);
     for(const parser::PointLight& pointlight: scene.point_lights){
-        float cos = parser::Vec3f::cosOfAngelBetween(pointlight.position - objectInfo.intersection_point, objectInfo.unit_normal_vector);
+        float cos = parser::Vec3f::cosOfAngleBetween(pointlight.position - objectInfo.intersection_point, objectInfo.unit_normal_vector);
         if (cos <= 0){
             continue;
         }
@@ -137,7 +144,7 @@ RGB Ray::getcolor(const BVH_Tree &tree, const parser::Scene &scene, const int &d
 
     if (material.is_mirror){
         parser::Vec3f new_ray_start_position = objectInfo.intersection_point + objectInfo.unit_normal_vector * scene.shadow_ray_epsilon;
-        float cosTheta = parser::Vec3f::cosOfAngelBetween(-direction, objectInfo.unit_normal_vector);
+        float cosTheta = parser::Vec3f::cosOfAngleBetween(-direction, objectInfo.unit_normal_vector);
         Ray new_ray = Ray(new_ray_start_position, (objectInfo.unit_normal_vector * 2 * cosTheta) + direction.getUnitVector());
         color = color + new_ray.getcolor(tree, scene, depth - 1) * material.mirror;
     }
@@ -145,9 +152,9 @@ RGB Ray::getcolor(const BVH_Tree &tree, const parser::Scene &scene, const int &d
 }
 
 RGB Ray::computeDiffuseColor(const parser::Vec3f &position, const parser::Vec3f &normal_vector, const parser::Material &material, const parser::PointLight &pointlight) const {
-    float cosTheta = parser::Vec3f::cosOfAngelBetween(pointlight.position - position, normal_vector);
+    float cosTheta = parser::Vec3f::cosOfAngleBetween(pointlight.position - position, normal_vector);
     cosTheta = std::max(0.0f, cosTheta);
-    return RGB((pointlight.intensity * material.diffuse * cosTheta) / (parser::Vec3f::square_distance(pointlight.position, position)));
+    return RGB((pointlight.intensity * material.diffuse * cosTheta) / (parser::Vec3f::squareDistance(pointlight.position, position)));
 }
 
 RGB Ray::computeAmbientColor(const parser::Material &material, const parser::Vec3f &ambient_light) const {
@@ -158,7 +165,7 @@ RGB Ray::computeSpecularColor(const parser::Vec3f &position, const parser::Vec3f
     parser::Vec3f w_light = (pointlight.position - position).getUnitVector();
     parser::Vec3f w_camera = (-direction).getUnitVector();
     parser::Vec3f h = (w_light + w_camera).getUnitVector();
-    float cosAlpha = parser::Vec3f::cosOfAngelBetween(h, normal_vector);
+    float cosAlpha = parser::Vec3f::cosOfAngleBetween(h, normal_vector);
     cosAlpha = std::max(0.0f, cosAlpha);
-    return RGB(material.specular * pointlight.intensity * pow(cosAlpha, material.phong_exponent) / (parser::Vec3f::square_distance(pointlight.position, position)));
+    return RGB(material.specular * pointlight.intensity * pow(cosAlpha, material.phong_exponent) / (parser::Vec3f::squareDistance(pointlight.position, position)));
 }

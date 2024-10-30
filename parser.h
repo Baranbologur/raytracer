@@ -11,8 +11,7 @@ namespace parser
 {
     //Notice that all the structures are as simple as possible
     //so that you are not enforced to adopt any style or design.
-    struct Vec3f
-    {
+    struct Vec3f {
         float x, y, z;
 
         Vec3f(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
@@ -20,68 +19,68 @@ namespace parser
         static const Vec3f MAXVEC;
         static const Vec3f MINVEC;
 
-        float calculateMagnitude() const {
-            return pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 0.5);
+        inline float calculateMagnitude() const {
+            return std::sqrt(x * x + y * y + z * z);
         }
 
         Vec3f getUnitVector() const {
             float magnitude = calculateMagnitude();
-            return {x/magnitude, y/magnitude, z/magnitude};
+            return (magnitude > 0) ? Vec3f(x / magnitude, y / magnitude, z / magnitude) : Vec3f(0, 0, 0);
         }
 
-        float dotProductWith(const Vec3f &vec) const {
+        inline float dotProductWith(const Vec3f& vec) const {
             return x * vec.x + y * vec.y + z * vec.z;
         }
 
-        Vec3f crossProductWith(const Vec3f &vec) const {
-            Vec3f crossResult;
-            crossResult.x = y * vec.z - z * vec.y;
-            crossResult.y = z * vec.x - x * vec.z;
-            crossResult.z = x * vec.y - y * vec.x;
-            return crossResult;
+        Vec3f crossProductWith(const Vec3f& vec) const {
+            return Vec3f(
+                y * vec.z - z * vec.y,
+                z * vec.x - x * vec.z,
+                x * vec.y - y * vec.x
+            );
         }
 
-        Vec3f operator*(const float &multiplier) const {
-            return {x*multiplier, y*multiplier, z*multiplier};
+        inline Vec3f operator*(float multiplier) const {
+            return Vec3f(x * multiplier, y * multiplier, z * multiplier);
         }
 
-        Vec3f operator*(const parser::Vec3f &vec) const {
+        inline Vec3f operator*(const Vec3f& vec) const {
             return Vec3f(x * vec.x, y * vec.y, z * vec.z);
         }
 
-        Vec3f operator+(const Vec3f &vec) const {
-            return {x + vec.x, y + vec.y, z + vec.z};
+        inline Vec3f operator+(const Vec3f& vec) const {
+            return Vec3f(x + vec.x, y + vec.y, z + vec.z);
         }
 
-        Vec3f operator-(const Vec3f &vec) const {
-            return {x - vec.x, y - vec.y, z - vec.z};
+        inline Vec3f operator-(const Vec3f& vec) const {
+            return Vec3f(x - vec.x, y - vec.y, z - vec.z);
         }
 
-        Vec3f operator/(const float &div) const {
-            return {x/div, y/div, z/div};
+        inline Vec3f operator/(float div) const {
+            return Vec3f(x / div, y / div, z / div);
         }
 
-        Vec3f operator-() const {
-            return {-x, -y, -z};
+        inline Vec3f operator-() const {
+            return Vec3f(-x, -y, -z);
         }
 
-        bool operator<(const Vec3f &vec) const {
+        inline bool operator<(const Vec3f& vec) const {
             return x < vec.x && y < vec.y && z < vec.z;
         }
 
-        bool operator>(const Vec3f &vec) const {
+        inline bool operator>(const Vec3f& vec) const {
             return x > vec.x && y > vec.y && z > vec.z;
         }
 
-        bool operator<=(const Vec3f &vec) const {
+        inline bool operator<=(const Vec3f& vec) const {
             return x <= vec.x && y <= vec.y && z <= vec.z;
         }
 
-        bool operator>=(const Vec3f &vec) const {
+        inline bool operator>=(const Vec3f& vec) const {
             return x >= vec.x && y >= vec.y && z >= vec.z;
         }
 
-        bool operator==(const Vec3f &vec) const {
+        inline bool operator==(const Vec3f& vec) const {
             return x == vec.x && y == vec.y && z == vec.z;
         }
 
@@ -89,34 +88,39 @@ namespace parser
             os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
             return os;
         }
-        
-        static float dotProduct(const Vec3f &vec1, const Vec3f &vec2){
+
+        static inline float dotProduct(const Vec3f& vec1, const Vec3f& vec2) {
             return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
         }
-        
-        static Vec3f crossProduct(const Vec3f &vec1, const Vec3f &vec2){
-            Vec3f crossResult;
-            crossResult.x = vec1.y * vec2.z - vec1.z * vec2.y;
-            crossResult.y = vec1.z * vec2.x - vec1.x * vec2.z;
-            crossResult.z = vec1.x * vec2.y - vec1.y * vec2.x;
-            return crossResult;
+
+        static Vec3f crossProduct(const Vec3f& vec1, const Vec3f& vec2) {
+            return Vec3f(
+                vec1.y * vec2.z - vec1.z * vec2.y,
+                vec1.z * vec2.x - vec1.x * vec2.z,
+                vec1.x * vec2.y - vec1.y * vec2.x
+            );
         }
 
-        static float cosOfAngelBetween(const Vec3f &vec1, const Vec3f &vec2) {
+        static float cosOfAngleBetween(const Vec3f& vec1, const Vec3f& vec2) {
             float dotResult = dotProduct(vec1, vec2);
-            return (dotResult / (vec1.calculateMagnitude() * vec2.calculateMagnitude()));
+            float magnitudes = vec1.calculateMagnitude() * vec2.calculateMagnitude();
+            return (magnitudes > 0) ? (dotResult / magnitudes) : 0.0f;
         }
 
-        static float sinOfAngelBetween(const Vec3f &vec1, const Vec3f &vec2){
-            return pow((1 - cosOfAngelBetween(vec1, vec2)), 0.5);
+        static float sinOfAngleBetween(const Vec3f& vec1, const Vec3f& vec2) {
+            float cosAngle = cosOfAngleBetween(vec1, vec2);
+            return std::sqrt(1 - cosAngle * cosAngle);
         }
 
-        static float radOfAngelBetween(const Vec3f &vec1, const Vec3f &vec2){
-            return acos(cosOfAngelBetween(vec1, vec2));
+        static float radOfAngleBetween(const Vec3f& vec1, const Vec3f& vec2) {
+            return std::acos(cosOfAngleBetween(vec1, vec2));
         }
 
-        static float square_distance(const Vec3f &vec1, const Vec3f &vec2) {
-            return pow(vec1.x - vec2.x, 2) + pow(vec1.y - vec2.y, 2) + pow(vec1.z - vec2.z, 2);
+        static float squareDistance(const Vec3f& vec1, const Vec3f& vec2) {
+            float dx = vec1.x - vec2.x;
+            float dy = vec1.y - vec2.y;
+            float dz = vec1.z - vec2.z;
+            return dx * dx + dy * dy + dz * dz;
         }
     };
 
@@ -179,7 +183,10 @@ namespace parser
         Vec3f normal_vector;
         Vec3f centeroid;
 
-        void calculateAndSetNormalVector(){
+        Triangle(){
+        }
+
+        Triangle(Vec3f& a, Vec3f& b, Vec3f& c, int material_id): a(a), b(b), c(c), material_id(material_id){
             normal_vector = (c-b).crossProductWith(a-b);
             centeroid = (a + b + c) / 3;
         }
