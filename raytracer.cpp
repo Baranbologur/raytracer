@@ -24,8 +24,6 @@ int main(int argc, char* argv[])
 
     BVH_Tree tree = BVH_Tree(scene);
 
-    std::cout << Node::max_level << "\n";
-
     for(parser::Camera camera: scene.cameras){
         parser::Vec3f center_point = camera.position + camera.gaze * camera.near_distance;
         parser::Vec3f top_left_point = center_point + camera.u * camera.near_plane.left + camera.up * camera.near_plane.top;
@@ -52,6 +50,9 @@ int main(int argc, char* argv[])
         }
         write_ppm(camera.image_name.c_str(), image, camera.image_width, camera.image_height);
 
+        /* Prevents memory leak but decreases speed */
+        // delete image;
+        
         auto end = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);

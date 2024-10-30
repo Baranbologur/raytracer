@@ -27,6 +27,20 @@ ClosestIntersectedObjectInfo BVH_Tree::getIntersectInfo(const Ray& r, bool backf
     return info;
 }
 
+/* Prevents memory leak but decreases speed */
+// void BVH_Tree::deleteTree(Node* node) {
+//     if (node == nullptr) return;
+
+//     deleteTree(node->left);
+//     deleteTree(node->right);
+
+//     delete node;
+// }
+
+// BVH_Tree::~BVH_Tree(){
+//     deleteTree(head);
+// }
+
 // void BVH_Tree::print_main(){
 //     this->head->print_tree();
 // }

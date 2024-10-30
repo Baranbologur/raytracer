@@ -21,6 +21,10 @@ class BVH_Tree{
 
         BVH_Tree(Scene& scene);
 
+        /* Prevents memory leak but decreases speed */
+        // ~BVH_Tree();
+        // void deleteTree(Node* node);
+
         void configureHead(Scene& scene);
         void print_main();
         ClosestIntersectedObjectInfo getIntersectInfo(const Ray& r, bool backface_culling_enabled) const ;

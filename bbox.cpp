@@ -50,5 +50,5 @@ bool BBox::rayIntersect(Ray ray) {
 
     float t_enter_largest = max(t_enter_x, max(t_enter_y, t_enter_z));
     float t_exit_smallest = min(t_exit_x, min(t_exit_y, t_exit_z));
-    return (t_enter_largest <= t_exit_smallest);
+    return (t_enter_largest <= t_exit_smallest) && t_exit_smallest >= 0;
 }

@@ -120,7 +120,7 @@ RGB Ray::getcolor(const BVH_Tree &tree, const parser::Scene &scene, const int &d
 
     parser::Material material = scene.materials[objectInfo.material_id - 1];
     RGB color = computeAmbientColor(material, scene.ambient_light);
-    for(parser::PointLight pointlight: scene.point_lights){
+    for(const parser::PointLight& pointlight: scene.point_lights){
         float cos = parser::Vec3f::cosOfAngelBetween(pointlight.position - objectInfo.intersection_point, objectInfo.unit_normal_vector);
         if (cos <= 0){
             continue;
