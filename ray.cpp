@@ -7,6 +7,8 @@
 Ray::Ray(parser::Vec3f start_position, parser::Vec3f direction): start_position(start_position), direction(direction){;}
 
 intersectionInfo Ray::getIntersectionInfoWithTriangle(const parser::Triangle &triangle) const {
+    float epsilon = 1e-5;
+
     float a_x = triangle.a.x - triangle.b.x;
     float a_y = triangle.a.y - triangle.b.y;
     float a_z = triangle.a.z - triangle.b.z;
@@ -49,7 +51,7 @@ intersectionInfo Ray::getIntersectionInfoWithTriangle(const parser::Triangle &tr
 
     float t = t_numerator / determinant;
 
-    if (beta >= 0 && gamma >= 0 && beta + gamma <= 1) {
+    if (beta >= -epsilon && gamma >= -epsilon && beta + gamma <= 1 + epsilon) {
         return intersectionInfo(true, t);
     }
 
