@@ -55,15 +55,17 @@ int main(int argc, char* argv[])
         
         auto end = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-        long hours = duration.count() / 3600;
-        long minutes = (duration.count() % 3600) / 60;
-        long seconds = duration.count() % 60;
+        long hours = duration.count() / 3600000;
+        long minutes = (duration.count() % 3600000) / 60000;
+        long seconds = (duration.count() % 60000) / 1000;
+        long milliseconds = duration.count() % 1000;
 
         std::cout << "Execution time of " << camera.image_name << ": " << hours << " hours, "
                 << minutes << " minutes, "
-                << seconds << " seconds\n";
+                << seconds << " seconds, "
+                << milliseconds << " milliseconds\n";
 
         start = end;
     }
