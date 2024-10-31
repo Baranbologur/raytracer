@@ -180,14 +180,14 @@ namespace parser
     {
         int material_id;
         Vec3f a, b, c;
-        Vec3f normal_vector;
+        Vec3f unit_normal_vector;
         Vec3f centeroid;
 
         Triangle(){
         }
 
         Triangle(Vec3f& a, Vec3f& b, Vec3f& c, int material_id): a(a), b(b), c(c), material_id(material_id){
-            normal_vector = (c-b).crossProductWith(a-b);
+            unit_normal_vector = ((c-b).crossProductWith(a-b)).getUnitVector();
             centeroid = (a + b + c) / 3;
         }
     };

@@ -84,7 +84,7 @@ ClosestIntersectedObjectInfo Ray::findIntersectedObject(const Node& node, const 
     bool sphere_found = false;
 
     for (parser::Triangle* triangle: node.triangles){ 
-        if (backface_culling_enabled && direction.dotProductWith(triangle->normal_vector) >= 0){
+        if (backface_culling_enabled && direction.dotProductWith(triangle->unit_normal_vector) >= 0){
             continue;
         }
         intersectionInfo intersectionInfo = getIntersectionInfoWithTriangle(*triangle);

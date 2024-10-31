@@ -60,7 +60,7 @@ struct ClosestIntersectedObjectInfo{
 
     ClosestIntersectedObjectInfo(parser::Triangle* triangle, float t, parser::Vec3f& intersection_point):
         isIntersectedWithAnyObject(true), material_id(triangle->material_id), t(t), intersection_point(intersection_point) {
-        unit_normal_vector = triangle->normal_vector.getUnitVector();
+        unit_normal_vector = triangle->unit_normal_vector;
     }
     ClosestIntersectedObjectInfo(parser::Sphere* sphere, float t, parser::Vec3f& intersection_point):
         isIntersectedWithAnyObject(true), material_id(sphere->material_id), t(t), intersection_point(intersection_point) {
